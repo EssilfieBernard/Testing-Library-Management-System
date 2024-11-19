@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+
+<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0"
+      style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.project.libraryfx.controller.ManagerAuthController">
+    <children>
+        <!-- Sidebar with Gradient Background -->
+        <AnchorPane prefHeight="600.0" prefWidth="350.0"
+                    style="-fx-background-color: linear-gradient(to bottom, #3B82F6, #1E40AF);">
+            <children>
+                <VBox alignment="CENTER" layoutX="25.0" layoutY="100.0" spacing="20">
+                    <Label text="Library Management"
+                           style="-fx-font-family: 'Segoe UI';
+                          -fx-font-size: 24;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: white;">
+                    </Label>
+
+                    <Label text="Manager Authentication"
+                           style="-fx-font-family: 'Segoe UI';
+                          -fx-font-size: 16;
+                          -fx-text-fill: rgba(255,255,255,0.8);">
+                    </Label>
+                </VBox>
+            </children>
+        </AnchorPane>
+
+        <!-- Main Content Area -->
+        <AnchorPane prefHeight="600.0" prefWidth="550.0" style="-fx-background-color: white;">
+            <children>
+                <VBox alignment="CENTER" spacing="20" layoutX="50.0" layoutY="100.0" prefWidth="450.0">
+                    <!-- Title Label -->
+                    <Label text="Enter Manager ID"
+                           style="-fx-font-family: 'Segoe UI';
+                          -fx-font-size: 32;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #1E293B;">
+                    </Label>
+
+                    <Label text="Verify your manager credentials"
+                           style="-fx-font-family: 'Segoe UI';
+                          -fx-font-size: 16;
+                          -fx-text-fill: #64748B;">
+                    </Label>
+
+                    <!-- Manager ID Input -->
+                    <VBox spacing="10">
+                        <Label text="Manager ID"
+                               style="-fx-font-family: 'Segoe UI';
+                             -fx-font-size: 16;
+                             -fx-font-weight: bold;
+                             -fx-text-fill: #1E293B;"/>
+                        <TextField fx:id="textFieldManagerId"
+                                   prefHeight="45.0"
+                                   style="-fx-background-color: #F8FAFC;
+                             -fx-border-color: #E2E8F0;
+                             -fx-border-radius: 10;
+                             -fx-background-radius: 10;
+                             -fx-padding: 10;
+                             -fx-font-family: 'Segoe UI';
+                             -fx-font-size: 16;"/>
+                    </VBox>
+
+                    <!-- Verify Button -->
+                    <Button fx:id="buttonVerify"
+                            text="Verify"
+                            prefHeight="45.0"
+                            prefWidth="450.0"
+                            onAction="#onVerifyClick"
+                            style="-fx-background-color: linear-gradient(to right, #3B82F6, #1E40AF);
+                          -fx-background-radius: 10;
+                          -fx-text-fill: white;
+                          -fx-font-family: 'Segoe UI';
+                          -fx-font-size: 16;
+                          -fx-font-weight: bold;
+                          -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);">
+                    </Button>
+                </VBox>
+            </children>
+        </AnchorPane>
+    </children>
+</HBox>

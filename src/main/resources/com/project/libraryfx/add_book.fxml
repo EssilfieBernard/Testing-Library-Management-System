@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0"
+      style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.project.libraryfx.controller.AddBookController">
+    <children>
+        <!-- Sidebar with Gradient Background -->
+        <AnchorPane prefHeight="600.0" prefWidth="350.0"
+                    style="-fx-background-color: linear-gradient(to bottom, #3B82F6, #1E40AF);">
+            <children>
+                <VBox alignment="CENTER" layoutX="25.0" layoutY="100.0" spacing="20">
+                    <Label text="Library Management"
+                           style="-fx-font-family: 'Segoe UI';
+                          -fx-font-size: 24;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: white;">
+                    </Label>
+
+                    <Label text="Add New Book"
+                           style="-fx-font-family: 'Segoe UI';
+                          -fx-font-size: 16;
+                          -fx-text-fill: rgba(255,255,255,0.8);">
+                    </Label>
+                </VBox>
+            </children>
+        </AnchorPane>
+
+        <!-- Main Content Area -->
+        <AnchorPane prefHeight="600.0" prefWidth="550.0" style="-fx-background-color: white;">
+            <children>
+                <VBox alignment="CENTER" spacing="20" layoutX="50.0" layoutY="100.0" prefWidth="450.0">
+                    <!-- Title Label -->
+                    <Label text="Add New Book"
+                           style="-fx-font-family: 'Segoe UI';
+                          -fx-font-size: 32;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #1E293B;">
+                    </Label>
+
+                    <Label text="Enter book details to add to library"
+                           style="-fx-font-family: 'Segoe UI';
+                          -fx-font-size: 16;
+                          -fx-text-fill: #64748B;">
+                    </Label>
+
+                    <!-- Input Fields -->
+                    <VBox spacing="15" prefWidth="450.0">
+                        <!-- Title Input -->
+                        <VBox spacing="10">
+                            <Label text="Title"
+                                   style="-fx-font-family: 'Segoe UI';
+                                -fx-font-size: 16;
+                                -fx-font-weight: bold;
+                                -fx-text-fill: #1E293B;"/>
+                            <TextField fx:id="textFieldTitle"
+                                       prefHeight="45.0"
+                                       style="-fx-background-color: #F8FAFC;
+                                -fx-border-color: #E2E8F0;
+                                -fx-border-radius: 10;
+                                -fx-background-radius: 10;
+                                -fx-padding: 10;
+                                -fx-font-family: 'Segoe UI';
+                                -fx-font-size: 16;"
+                                       promptText="Enter book title"/>
+                        </VBox>
+
+                        <!-- Author Input -->
+                        <VBox spacing="10">
+                            <Label text="Author"
+                                   style="-fx-font-family: 'Segoe UI';
+                                -fx-font-size: 16;
+                                -fx-font-weight: bold;
+                                -fx-text-fill: #1E293B;"/>
+                            <TextField fx:id="textFieldAuthor"
+                                       prefHeight="45.0"
+                                       style="-fx-background-color: #F8FAFC;
+                                -fx-border-color: #E2E8F0;
+                                -fx-border-radius: 10;
+                                -fx-background-radius: 10;
+                                -fx-padding: 10;
+                                -fx-font-family: 'Segoe UI';
+                                -fx-font-size: 16;"
+                                       promptText="Enter author name"/>
+                        </VBox>
+
+                        <!-- ISBN Input -->
+                        <VBox spacing="10">
+                            <Label text="ISBN"
+                                   style="-fx-font-family: 'Segoe UI';
+                                -fx-font-size: 16;
+                                -fx-font-weight: bold;
+                                -fx-text-fill: #1E293B;"/>
+                            <TextField fx:id="textFieldISBN"
+                                       prefHeight="45.0"
+                                       style="-fx-background-color: #F8FAFC;
+                                -fx-border-color: #E2E8F0;
+                                -fx-border-radius: 10;
+                                -fx-background-radius: 10;
+                                -fx-padding: 10;
+                                -fx-font-family: 'Segoe UI';
+                                -fx-font-size: 16;"
+                                       promptText="Enter ISBN number"/>
+                        </VBox>
+
+                        <!-- Action Buttons -->
+                        <HBox spacing="15" alignment="CENTER">
+                            <Button fx:id="buttonCancel"
+                                    text="Cancel"
+                                    prefHeight="45.0"
+                                    prefWidth="200.0"
+                                    onAction="#onCancelClick"
+                                    style="-fx-background-color: #E53E3E;
+                                -fx-background-radius: 10;
+                                -fx-text-fill: white;
+                                -fx-font-family: 'Segoe UI';
+                                -fx-font-size: 16;
+                                -fx-font-weight: bold;
+                                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);"/>
+                            <Button fx:id="buttonSave"
+                                    text="Save"
+                                    prefHeight="45.0"
+                                    prefWidth="200.0"
+                                    onAction="#onSaveClick"
+                                    style="-fx-background-color: linear-gradient(to right, #3B82F6, #1E40AF);
+                                -fx-background-radius: 10;
+                                -fx-text-fill: white;
+                                -fx-font-family: 'Segoe UI';
+                                -fx-font-size: 16;
+                                -fx-font-weight: bold;
+                                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </children>
+        </AnchorPane>
+    </children>
+</HBox>

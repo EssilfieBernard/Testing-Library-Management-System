@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.project.libraryfx.TransactionHistoryController">
+    <children>
+        <Label layoutX="20.0" layoutY="20.0" text="Transaction History" style="-fx-font-size: 24; -fx-font-family: 'Arial Rounded MT Bold';"/>
+        <TableView fx:id="transactionTable" layoutX="20.0" layoutY="60.0" prefHeight="420.0" prefWidth="760.0">
+            <columns>
+                <TableColumn fx:id="bookColumn" text="Book" prefWidth="250.0" />
+                <TableColumn fx:id="dateCreatedColumn" text="Date Created" prefWidth="150.0" />
+                <TableColumn fx:id="dueDateColumn" text="Due Date" prefWidth="150.0" />
+                <TableColumn fx:id="transactionRefColumn" text="Transaction Reference" prefWidth="150.0" />
+                <TableColumn fx:id="selectColumn" text="Select" prefWidth="60.0" />
+            </columns>
+        </TableView>
+        <Button fx:id="returnButton" layoutX="650.0" layoutY="500.0" mnemonicParsing="false" text="Return Selected Book" style="-fx-background-color: #38BDF8;" />
+    </children>
+</AnchorPane>
