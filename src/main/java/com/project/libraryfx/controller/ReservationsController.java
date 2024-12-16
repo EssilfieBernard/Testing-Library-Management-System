@@ -107,16 +107,27 @@ public class ReservationsController {
 
     @FXML
     private void cancelReservation(Reservation reservation) {
-        boolean success = DBUtils.cancelReservation(reservation);
-        if (success) {
-            loadReservations(); // Refresh the table
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Reservation cancelled successfully.");
+        try {
+            boolean success = DBUtils.cancelReservation(reservation);
+
+            Alert alert;
+            if (success) {
+                loadReservations(); // Refresh the table
+                alert = new Alert(Alert.AlertType.INFORMATION, "Reservation cancelled successfully.");
+            } else {
+                alert = new Alert(Alert.AlertType.ERROR, "Failed to cancel reservation.");
+            }
             alert.show();
-        } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Failed to cancel reservation.");
-            alert.show();
+
+        } catch (RuntimeException e) {
+            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+            errorAlert.setContentText(e.getMessage());
+            errorAlert.show();
+
+            System.err.println(e.getMessage());
         }
     }
+
 
     @FXML
     public void handleBackButton(ActionEvent event) {

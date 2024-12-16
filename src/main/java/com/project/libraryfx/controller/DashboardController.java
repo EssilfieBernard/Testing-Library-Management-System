@@ -183,28 +183,33 @@ public class DashboardController implements Initializable {
             String patronId = getCurrentPatronId();
             if (patronId != null) {
                 String status = selectedBook.getStatus();
-                if (status.equalsIgnoreCase("Available")) {
-                    // Book is available for borrowing, so let's handle borrowing
+
+                try {
                     boolean success = DBUtils.reserveBook(selectedBook, patronId);
-                    if (success) {
+
+                    Alert alert;
+                    if (success && status.equalsIgnoreCase("Available")) {
                         selectedBook.setStatus("Reserved");
                         booksTable.refresh();
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION, "Book reserved successfully!");
-                        alert.show();
+                        alert = new Alert(Alert.AlertType.INFORMATION, "Book reserved successfully!");
+                    } else if (!success && status.equalsIgnoreCase("Borrowed")) {
+                        alert = new Alert(Alert.AlertType.INFORMATION, "You have been added to the reservation queue.");
                     } else {
-                        Alert alert = new Alert(Alert.AlertType.ERROR, "Failed to reserve the book.");
-                        alert.show();
+                        alert = new Alert(Alert.AlertType.WARNING, "Failed to reserve the book.");
                     }
-                } else if (status.equalsIgnoreCase("Borrowed")) {
-                    // Book is already borrowed, add the patron to the reservation queue
-                    DBUtils.addToReservationQueue(selectedBook, patronId);
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "You have been added to the reservation queue.");
                     alert.show();
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.WARNING, "Book is not available for reservation.");
-                    alert.show();
+
+                } catch (RuntimeException e) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setContentText(e.getMessage());
+                    errorAlert.show();
+
+                    System.err.println(e.getMessage());
                 }
             }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "No book selected for reservation.");
+            alert.show();
         }
     }
 

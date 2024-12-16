@@ -44,9 +44,20 @@ public class AddBookController {
         }
 
         try {
-            DBUtils.addBook(title, author, isbn);
-            System.out.println("Saving book: " + title + " by " + author + ", ISBN: " + isbn);
+            boolean success = DBUtils.addBook(title, author, isbn);
+
+            if (success) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setContentText("Book added successfully");
+                alert.show();
+                System.out.println("Saving book: " + title + " by " + author + ", ISBN: " + isbn);
+            }
         } catch (RuntimeException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText(e.getMessage());
+
+            alert.show();
+
             System.err.println(e.getMessage());
         }
     }

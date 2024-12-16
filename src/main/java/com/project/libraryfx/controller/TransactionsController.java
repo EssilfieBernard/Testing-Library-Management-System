@@ -137,10 +137,13 @@ public class TransactionsController implements Initializable {
         }
     }
 
+
+
     @FXML
     private void handleReturnBook(ActionEvent event) {
         Transaction selectedTransaction = transactionsTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction != null) {
+
             if (selectedTransaction.getStatus().equals("ACTIVE")) {
                 double fine = calculateFine(selectedTransaction);
                 selectedTransaction.setFineAmount(fine);

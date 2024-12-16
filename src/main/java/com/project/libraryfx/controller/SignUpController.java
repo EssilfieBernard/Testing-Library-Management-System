@@ -5,6 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -13,6 +14,8 @@ import javafx.scene.Node;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import static com.project.libraryfx.DBUtils.changeScene;
 
 public class SignUpController implements Initializable {
     @FXML
@@ -32,14 +35,42 @@ public class SignUpController implements Initializable {
         buttonSignup.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                DBUtils.createPatron(actionEvent, textFieldUsername.getText(), passwordFieldPassword.getText(), textFieldUsername.getText());
+                String username = textFieldUsername.getText();
+                String password = passwordFieldPassword.getText();
+                String welcomeText = textFieldUsername.getText();
+
+                try {
+                    // Perform patron creation logic
+                    String memberId = DBUtils.createPatron(username, password, welcomeText);
+
+                    // Show success message
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setContentText("Account created successfully! Redirecting to login page. Your member id is " + memberId);
+                    successAlert.showAndWait();
+
+                    // Change scene after successful creation
+                    changeScene(actionEvent, "dashboard.fxml", "Welcome!", username, welcomeText);
+
+                } catch (IllegalArgumentException e) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setContentText(e.getMessage());
+                    alert.show();
+
+                } catch (RuntimeException e) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setContentText(e.getMessage());
+                    alert.show();
+
+                    System.err.println(e.getMessage());
+                }
             }
         });
+
 
         buttonLogin.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                DBUtils.changeScene(actionEvent, "login.fxml", "Log in!", null, null);
+                changeScene(actionEvent, "login.fxml", "Log in!", null, null);
                 Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
                 if (stage != null) {
                     stage.close();

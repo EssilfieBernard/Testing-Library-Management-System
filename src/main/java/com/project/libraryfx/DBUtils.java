@@ -1,8 +1,6 @@
 package com.project.libraryfx;
 
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.project.libraryfx.controller.DashboardController;
 import com.project.libraryfx.data_structures.BookReservationQueue;
 import com.project.libraryfx.entities.Book;
@@ -16,11 +14,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.sql.Connection;
@@ -33,52 +28,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class DBUtils {
     private static Map<String, BookReservationQueue> bookReservationQueues = new HashMap<>();
-
-
     private final static Connection connection = DatabaseConnection.getConnection();
 
 
-    public static void changeScene(ActionEvent event, String fxmlFile, String title, String username, String welcomeText) {
-        Parent root = null;
-
-
-        if (username != null && welcomeText != null) {
-            try {
-                FXMLLoader loader = new FXMLLoader(DBUtils.class.getResource(fxmlFile));
-                root = loader.load();
-                DashboardController dashboardController = loader.getController();
-                dashboardController.setUserInformation(username, welcomeText);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }else {
-            try {
-                root = FXMLLoader.load(DBUtils.class.getResource(fxmlFile));
-            }catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.setTitle(title);
-        stage.setScene(new Scene(root, 600, 400));
-        stage.show();
-
-    }
-
-    public static void createPatron(ActionEvent event, String username, String password, String welcomeText) {
+    public static String createPatron(String username, String password, String welcomeText) {
         String query = "INSERT INTO patrons (memberid, username, password, welcometext) VALUES (?, ?, ?, ?)";
         String memberId = checkMemberId(generateMemberId());
 
         try {
             if (usernameExists(username)) {
-                System.out.println("Username exists.");
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Username already exists");
-                alert.show();
-                return;  // Exit the method if the username exists
+                throw new IllegalArgumentException("Username already exists");
             }
 
             var statement = connection.prepareStatement(query);
@@ -90,22 +53,19 @@ public class DBUtils {
             var rows = statement.executeUpdate();
             if (rows > 0) {
                 System.out.println("Patron added successfully");
-
-                // If patron is created successfully, show a success message
-                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setContentText("Account created successfully! Redirecting to login page. Your member id is " + memberId);
-                successAlert.showAndWait();
-
-
-                changeScene(event, "dashboard.fxml", "Welcome!", username, welcomeText);
+                return memberId;
+            } else {
+                throw new SQLException("Failed to add patron");
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("Database error occurred: " + e.getMessage());
+            throw new RuntimeException("Database error occurred", e);
         }
     }
 
-    public static void loginUser(ActionEvent event, String username, String password) {
-        String query = "select password, welcometext from patrons where username = ?";
+
+    public static Optional<String> loginUser(String username, String password) {
+        String query = "SELECT password, welcometext FROM patrons WHERE username = ?";
 
         try {
             var statement = connection.prepareStatement(query);
@@ -113,29 +73,25 @@ public class DBUtils {
             var resultSet = statement.executeQuery();
 
             if (!resultSet.isBeforeFirst()) {
-                System.out.println("user not found in database");
-                var alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Invalid username or password");
-                alert.show();
-            }
-            else {
+                System.out.println("User not found in database");
+                return Optional.empty();
+            } else {
                 while (resultSet.next()) {
                     String retrievedPassword = resultSet.getString("password");
                     String retrievedWelcomeText = resultSet.getString("welcometext");
-                    if (retrievedPassword.equals(password))
-                        changeScene(event, "dashboard.fxml", "Welcome", username, retrievedWelcomeText);
-                    else {
-                        var alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setContentText("Invalid username or password");
-                        alert.show();
+                    if (retrievedPassword.equals(password)) {
+                        return Optional.of(retrievedWelcomeText);
                     }
-
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("Database error occurred: " + e.getMessage());
+            throw new RuntimeException("Database error occurred", e);
         }
+
+        return Optional.empty();
     }
+
 
     public static LinkedList<Book> getBorrowedBooks(String patronId) {
         String query = "SELECT title, author, isbn, status FROM books WHERE assignedto = ?";
@@ -146,7 +102,6 @@ public class DBUtils {
             statement.setString(1, patronId);
 
             var resultSet = statement.executeQuery();
-
             while (resultSet.next()) {
                 String title = resultSet.getString("title");
                 String author = resultSet.getString("author");
@@ -171,7 +126,6 @@ public class DBUtils {
             statement.setString(1, loggedInUsername);
 
             var resultSet = statement.executeQuery();
-
             if (resultSet.next())
                 return resultSet.getString("memberid");
         } catch (SQLException e) {
@@ -201,7 +155,7 @@ public class DBUtils {
     }
 
 
-    public static void addBook(String title, String author, String isbn) {
+    public static boolean addBook(String title, String author, String isbn) {
         String query = "INSERT INTO books (title, author, isbn, status) VALUES (?, ?, ?, ?)";
 
         try {
@@ -212,26 +166,17 @@ public class DBUtils {
             statement.setString(1, title);
             statement.setString(2, author);
             statement.setString(3, isbn);
-            statement.setString(4, "AVAILABLE"); // Assuming default status is "Available"
+            statement.setString(4, "AVAILABLE");
 
             // Execute the statement
             int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0;
 
-            // Check the result
-            if (rowsAffected > 0) {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setContentText("Book added successfully");
-                alert.show();
-            }
         } catch (SQLException e) {
-            // Handle SQL exceptions
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error adding book: " + e.getMessage());
-            alert.show();
+            System.err.println("Error adding book: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
-
 
 
     public static boolean borrowBook(Book selectedBook, String patronId) {
@@ -258,16 +203,10 @@ public class DBUtils {
 
                     // If the book is already borrowed, return false
                     if (!status.equalsIgnoreCase("Available")) {
-                        Alert alert = new Alert(Alert.AlertType.WARNING);
-                        alert.setContentText("Book is not available for borrowing.");
-                        alert.show();
                         return false;
                     }
                 } else {
                     System.out.println("Book not found in the database.");
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setContentText("Book not found in the database.");
-                    alert.show();
                     return false;
                 }
             }
@@ -294,46 +233,34 @@ public class DBUtils {
                         if (rowsInserted > 0) {
                             // Commit the transaction
                             connection.commit();
-
-                            Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                            successAlert.setContentText("Book borrowed successfully and transaction created!");
-                            successAlert.show();
                             return true;
                         } else {
                             System.out.println("Failed to create transaction.");
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setContentText("Failed to create transaction for the borrow action.");
-                            alert.show();
                         }
                     }
                 } else {
                     System.out.println("Failed to update book status.");
                 }
-            }
 
-            // Rollback in case of failure
-            connection.rollback();
+                // Rollback in case of failure
+                connection.rollback();
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                connection.rollback();
+                throw new RuntimeException("Error borrowing book: " + e.getMessage(), e);
+            } finally {
+                connection.setAutoCommit(true);
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
-            try {
-                connection.rollback();
-            } catch (SQLException rollbackEx) {
-                rollbackEx.printStackTrace();
-            }
-            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-            errorAlert.setContentText("Error borrowing book: " + e.getMessage());
-            errorAlert.show();
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
+            throw new RuntimeException("Error borrowing book: " + e.getMessage(), e);
         }
 
         return false;
     }
+
 
 
     private static String generateUniqueReference() {
@@ -433,16 +360,15 @@ public class DBUtils {
                 if (resultSet.next()) {
                     String status = resultSet.getString("status");
 
-                    // If book is borrowed, add to reservation queue
                     if (status.equalsIgnoreCase("BORROWED")) {
+                        // Add to reservation queue
                         addToReservationQueue(selectedBook, patronId);  // Add patron to queue
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION, "Book is borrowed, you've been added to the reservation queue.");
-                        alert.show();
-                        return false;
+                        connection.commit();
+                        return false;  // Indicate that the book is borrowed and added to the queue
                     } else if (status.equalsIgnoreCase("AVAILABLE")) {
-                        // Book is available, proceed with reservation
+                        // Update book's status to RESERVED
                         try (PreparedStatement updateStatement = connection.prepareStatement(updateBookQuery)) {
-                            updateStatement.setString(1, patronId);  // Assign reserved by patron ID
+                            updateStatement.setString(1, patronId);
                             updateStatement.setString(2, selectedBook.getIsbn());
                             int rowsUpdated = updateStatement.executeUpdate();
 
@@ -453,28 +379,22 @@ public class DBUtils {
                                     reservationStatement.setString(2, patronId);
                                     reservationStatement.setString(3, "RESERVED");
                                     reservationStatement.setDate(4, java.sql.Date.valueOf(LocalDate.now()));
-                                    reservationStatement.setDate(5, java.sql.Date.valueOf(LocalDate.now().plusDays(7))); // Reservation duration of 7 days
+                                    reservationStatement.setDate(5, java.sql.Date.valueOf(LocalDate.now().plusDays(7)));  // Reservation duration of 7 days
 
                                     int rowsInserted = reservationStatement.executeUpdate();
 
                                     if (rowsInserted > 0) {
                                         connection.commit();  // Commit transaction
-                                        return true;
-                                    } else {
-                                        System.out.println("Failed to create reservation.");
+                                        return true;  // Reservation successful
                                     }
                                 }
                             }
                         }
                     }
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setContentText("Book not found in the database.");
-                    alert.show();
                 }
-            }
 
-            connection.rollback();  // Rollback if something fails
+                connection.rollback();  // Rollback if something fails
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             try {
@@ -482,19 +402,17 @@ public class DBUtils {
             } catch (SQLException rollbackEx) {
                 rollbackEx.printStackTrace();
             }
-            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-            errorAlert.setContentText("Error reserving book: " + e.getMessage());
-            errorAlert.show();
+            throw new RuntimeException("Error reserving book: " + e.getMessage(), e);
         } finally {
             try {
-                connection.setAutoCommit(true);  // Reset auto commit
+                connection.setAutoCommit(true);  // Reset auto-commit
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
         }
+
         return false;
     }
-
 
     public static boolean isBookAvailable(String isbn) {
         String query = "SELECT status FROM books WHERE isbn = ?";
@@ -571,16 +489,13 @@ public class DBUtils {
                         // Process the next reservation in the queue
                         queue.processReservation();
                     }
-
                     // Commit the transaction
                     connection.commit();
                     return true;
                 }
             }
-
             // Rollback in case of failure
             connection.rollback();
-
         } catch (SQLException e) {
             e.printStackTrace();
             try {
@@ -588,9 +503,7 @@ public class DBUtils {
             } catch (SQLException rollbackEx) {
                 rollbackEx.printStackTrace();
             }
-            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-            errorAlert.setContentText("Error canceling reservation: " + e.getMessage());
-            errorAlert.show();
+            throw new RuntimeException("Error canceling reservation: " + e.getMessage(), e);
         } finally {
             try {
                 connection.setAutoCommit(true);
@@ -598,10 +511,8 @@ public class DBUtils {
                 ex.printStackTrace();
             }
         }
-
         return false;
     }
-
 
 
     public static BookReservationQueue getReservationQueue(String bookIsbn) {
@@ -610,16 +521,18 @@ public class DBUtils {
 
         try (PreparedStatement ps = connection.prepareStatement(query)) {
             ps.setString(1, bookIsbn);
-            ResultSet rs = ps.executeQuery();
 
-            while (rs.next()) {
-                String patronId = rs.getString("patron_id");
-                queue.addReservation(new Reservation(patronId, new Book(bookIsbn)));  // Add patron to the queue
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String patronId = rs.getString("patron_id");
+                    queue.addReservation(new Reservation(patronId, new Book(bookIsbn)));
+                    bookReservationQueues.put(bookIsbn, queue);
+                }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            // Consider using a logger
+            System.err.println("Error retrieving reservation queue: " + e.getMessage());
         }
-
 
         return queue;
     }
@@ -640,26 +553,6 @@ public class DBUtils {
         }
     }
 
-
-
-    private void loadLoginPage() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("login.fxml"));
-            Parent root = loader.load();
-
-            // Set the new scene for login page
-            Stage loginStage = new Stage();
-            loginStage.setScene(new Scene(root));
-            loginStage.setTitle("Login Page");
-            loginStage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error loading login page.");
-            alert.show();
-        }
-    }
-
     private static Patron getPatronById(String memberId) throws SQLException{
         String query = "select * from patrons where memberid = ?";
 
@@ -671,7 +564,6 @@ public class DBUtils {
             return null;
 
         return new Patron(resultSet.getString("memberid"), resultSet.getString("username"));
-
     }
 
     public static void addToReservationQueue(Book book, String patronId) {
@@ -695,28 +587,7 @@ public class DBUtils {
     }
 
 
-
-    public static void saveReservationQueuesToFile() {
-        try (FileWriter file = new FileWriter("reservation_queues.json")) {
-            Gson gson = new Gson();
-            gson.toJson(bookReservationQueues, file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void loadReservationQueuesFromFile() {
-        try (FileReader reader = new FileReader("reservation_queues.json")) {
-            Gson gson = new Gson();
-            bookReservationQueues = gson.fromJson(reader, new TypeToken<Map<String, BookReservationQueue>>(){}.getType());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
-    private static String generateMemberId() {
+    public static String generateMemberId() {
         final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         int length = 5;
         StringBuilder id = new StringBuilder(length);
@@ -724,53 +595,82 @@ public class DBUtils {
 
         for (int i = 0; i < length; i++)
             id.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
-
         return id.toString();
     }
 
-    private static boolean usernameExists(String username) {
-        String query = "select count(*) from patrons where username = ?";
-
-        try {
-            var statement = connection.prepareStatement(query);
+    public static boolean usernameExists(String username) {
+        String query = "SELECT COUNT(*) FROM patrons WHERE username = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, username);
-
-            var resultSet = statement.executeQuery();
-
-            if (resultSet.next())
-                return resultSet.getInt(1) > 0;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet != null && resultSet.next()) {
+                    return resultSet.getInt(1) > 0;
+                }
+            }
         } catch (SQLException e) {
+            // Log exception details
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
         return false;
     }
 
-    private static boolean memberIdExists(String id) {
-        String query = "select count(*) from patrons where memberid = ?";
 
+    public static boolean memberIdExists(String id) {
+        String query = "select count(*) from patrons where memberid = ?";
         try {
             var statement = connection.prepareStatement(query);
             statement.setString(1, id);
-
             var resultSet = statement.executeQuery();
 
-            if (resultSet.next())
+            // Check if resultSet is not null and has results
+            if (resultSet != null && resultSet.next()) {
                 return resultSet.getInt(1) > 0;
+            }
         } catch (SQLException e) {
+            // Log exception details
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
         return false;
     }
 
-    private static String checkMemberId(String id) {
+    public static String checkMemberId(String id) {
         if (!memberIdExists(id))
             return id;
-
         return checkMemberId(generateMemberId());
-
     }
 
+    public static Map<String, BookReservationQueue> getBookReservationQueues() {
+        return bookReservationQueues;
+    }
 
+    public static void setBookReservationQueues(Map<String, BookReservationQueue> bookReservationQueues) {
+        DBUtils.bookReservationQueues = bookReservationQueues;
+    }
 
+    public static void changeScene(ActionEvent event, String fxmlFile, String title, String username, String welcomeText) {
+        Parent root = null;
+        if (username != null && welcomeText != null) {
+            try {
+                FXMLLoader loader = new FXMLLoader(DBUtils.class.getResource(fxmlFile));
+                root = loader.load();
+                DashboardController dashboardController = loader.getController();
+                dashboardController.setUserInformation(username, welcomeText);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else {
+            try {
+                root = FXMLLoader.load(DBUtils.class.getResource(fxmlFile));
+            }catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.setTitle(title);
+        stage.setScene(new Scene(root, 600, 400));
+        stage.show();
 
+    }
 }

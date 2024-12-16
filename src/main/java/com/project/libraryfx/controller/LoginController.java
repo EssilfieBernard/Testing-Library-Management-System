@@ -15,7 +15,10 @@ import javafx.stage.Stage;
 import javafx.scene.Node;
 
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
+
+import static com.project.libraryfx.DBUtils.changeScene;
 
 public class LoginController implements Initializable {
 
@@ -47,14 +50,33 @@ public class LoginController implements Initializable {
                     return;
                 }
 
-                DBUtils.loginUser(actionEvent, username, password);
+                try {
+                    Optional<String> welcomeTextOpt = DBUtils.loginUser(username, password);
+
+                    if (welcomeTextOpt.isPresent()) {
+                        // Successful login, change scene
+                        changeScene(actionEvent, "dashboard.fxml", "Welcome", username, welcomeTextOpt.get());
+                    } else {
+                        // Invalid credentials
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setContentText("Invalid username or password");
+                        alert.show();
+                    }
+                } catch (RuntimeException e) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setContentText(e.getMessage());
+                    alert.show();
+
+                    System.err.println(e.getMessage());
+                }
             }
         });
+
 
         buttonSignup.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                DBUtils.changeScene(actionEvent, "signup.fxml", "Sign up!", null, null);
+                changeScene(actionEvent, "signup.fxml", "Sign up!", null, null);
                 Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
                 if (stage != null) {
                     stage.close();
